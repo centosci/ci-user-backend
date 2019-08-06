@@ -1,0 +1,6 @@
+app.pyc
+.env
+.vscode
+__pycache__
+venv/
+wsgi.pyc
