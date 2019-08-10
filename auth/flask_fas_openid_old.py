@@ -136,6 +136,7 @@ class FAS(object):
         oidconsumer = consumer.Consumer(flask.session, None)
         info = oidconsumer.complete(flask.request.values, base_url)
         display_identifier = info.getDisplayIdentifier()
+        
         if info.status == consumer.FAILURE and display_identifier:
             return 'FAILURE. display_identifier: %s' % display_identifier
         elif info.status == consumer.CANCEL:

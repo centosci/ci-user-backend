@@ -1,6 +1,10 @@
 import flask
 from models import *
+import datetime
 
+def get_current_ist_time():
+    return datetime.datetime.utcnow()
+    
 def add_comment(request_id, user_id, comment):
     """
     Add comment on a project request.

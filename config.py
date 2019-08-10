@@ -7,6 +7,8 @@ class Config():
     CSRF_ENABLED = True
     SECRET_KEY = os.environ['SECRET_KEY']
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    FAS_OPENID_ENDPOINT = 'https://id.centos.org/idp/openid/'
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
     
 class ProductionConfig(Config):
     DEBUG = False

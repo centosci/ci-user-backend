@@ -3,8 +3,8 @@ from flask import jsonify, request, Blueprint
 import datetime
 from sqlalchemy import func, case
 from models import *
-from flask_fas_openid import fas_login_required
-from helpers import add_comment, create_project_for_request, add_member_to_project
+from auth.fas import fas_login_required
+from utils.helpers import add_comment, create_project_for_request, add_member_to_project
 
 api = Blueprint('api', __name__)
 

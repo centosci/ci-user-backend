@@ -2,10 +2,10 @@ import flask
 from flask import jsonify, Blueprint
 from app import app
 from models import User
-from flask_fas_openid import FAS
+from auth.fas import newFAS
 
 auth = Blueprint('auth', __name__)
-fas = FAS(app)
+fas = newFAS(app)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def auth_login():
