@@ -6,7 +6,6 @@ class Config():
     TESTING = False
     CSRF_ENABLED = True
     SECRET_KEY = os.environ['SECRET_KEY']
-    # SESSION_COOKIE_HTTPONLY = False
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
     
 class ProductionConfig(Config):
@@ -21,6 +20,7 @@ class StagingConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
+    SESSION_COOKIE_HTTPONLY = False
 
 
 class TestingConfig(Config):

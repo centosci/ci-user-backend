@@ -1,15 +1,13 @@
 import flask
-from flask import jsonify
+from flask import jsonify, Blueprint
 from app import app
 from models import User
 from flask_fas_openid import FAS
 
-
+auth = Blueprint('auth', __name__)
 fas = FAS(app)
 
-app.config['FAS_OPENID_ENDPOINT'] = 'https://id.centos.org/idp/openid/'
-
-@app.route('/login', methods=['GET', 'POST'])
+@auth.route('/login', methods=['GET', 'POST'])
 def auth_login():
     """
     Method to log into the application using FAS OpenID. 
@@ -18,7 +16,7 @@ def auth_login():
         return 'http://localhost:3000/projects/'
     return fas.login(return_url='http://localhost:3000/projects')
 
-@app.route('/logout')
+@auth.route('/logout')
 def auth_logout():
     """ 
     Method to log out currently logged in user from the application.

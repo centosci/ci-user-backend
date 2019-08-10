@@ -1,18 +1,19 @@
 import flask
-from flask import jsonify, request
+from flask import jsonify, request, Blueprint
 import datetime
 from sqlalchemy import func, case
-from app import app
 from models import *
 from flask_fas_openid import fas_login_required
 from helpers import add_comment, create_project_for_request, add_member_to_project
 
-@app.route('/')
+api = Blueprint('api', __name__)
+
+@api.route('/')
 def index():
     return 'I\'m the home page'
 
 
-@app.route('/user')
+@api.route('/user')
 @fas_login_required
 def get_user():
     """
@@ -24,7 +25,7 @@ def get_user():
     return jsonify(user), 200
 
 
-@app.route('/new-request', methods=['POST'])
+@api.route('/new-request', methods=['POST'])
 @fas_login_required
 def create_new_request():
     """
@@ -57,14 +58,13 @@ def create_new_request():
     return jsonify({'result': 'success', 'message': 'Request created succesfully!'}), 200
 
 
-@app.route('/requests', methods=['GET'])
+@api.route('/requests', methods=['GET'])
 @fas_login_required
 def get_requests():
     """
     Get all project requests
     """
     filters = []
-    print(request.args)
     if 'project_name' in request.args:
         filters.append(Request.project_name == request.args['project_name'])
     if 'request_id' in request.args:
@@ -93,7 +93,7 @@ def get_requests():
     return jsonify({'message': 'success', 'requests': requests}), 200
 
 
-@app.route('/requests/<string:request_id>', methods=['GET'])
+@api.route('/requests/<string:request_id>', methods=['GET'])
 @fas_login_required
 def get_individual_request(request_id):
     """
@@ -124,7 +124,7 @@ def get_individual_request(request_id):
     return jsonify({'message':'success', 'current_request': current_request_dict, 'comments': comments_list}), 200
 
 
-@app.route('/edit-request/', methods=['POST'])
+@api.route('/edit-request/', methods=['POST'])
 @fas_login_required
 def edit_request():
     """
@@ -182,7 +182,7 @@ def edit_request():
     return jsonify({'result': 'success', 'message': f'{action} action completed for request.'}), 200
         
 
-@app.route('/comment', methods=['POST'])
+@api.route('/comment', methods=['POST'])
 @fas_login_required
 def post_comment():
     """
@@ -199,7 +199,7 @@ def post_comment():
         return jsonify({'result': 'success', 'message': response['message']})
 
 
-@app.route('/projects')
+@api.route('/projects')
 def projects():
     """
     Get all projects
