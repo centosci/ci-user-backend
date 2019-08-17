@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import string
 import random
 
-BASE = declarative_base()
+# BASE = declarative_base()
 DBSESSIONFACTORY = None
 
 def set_request():
@@ -41,5 +41,5 @@ def create_session(db_url=None, debug=False, pool_recycle=3600):
         DBSESSIONFACTORY = sessionmaker(bind=engine)
 
     scopedsession = scoped_session(DBSESSIONFACTORY)
-    BASE.metadata.bind = scopedsession
+    # BASE.metadata.bind = scopedsession
     return scopedsession

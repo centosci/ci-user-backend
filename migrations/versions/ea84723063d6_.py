@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: bdf77d3b9488
+Revision ID: ea84723063d6
 Revises: 
-Create Date: 2019-06-18 07:15:14.778331
+Create Date: 2019-08-18 01:34:26.905986
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'bdf77d3b9488'
+revision = 'ea84723063d6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,8 +39,8 @@ def upgrade():
     sa.UniqueConstraint('id')
     )
     op.create_table('project_member',
-    sa.Column('user_id', postgresql.UUID(), nullable=False),
-    sa.Column('project_id', postgresql.UUID(), nullable=False),
+    sa.Column('user_id', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('project_id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.ForeignKeyConstraint(['project_id'], ['project.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('user_id', 'project_id')
@@ -51,6 +51,7 @@ def upgrade():
     sa.Column('project_name', sa.String(), nullable=True),
     sa.Column('project_desc', sa.String(), nullable=True),
     sa.Column('status', sa.Enum('pending', 'approved', 'declined', name='request_status'), nullable=True),
+    sa.Column('updated_by', sa.String(), nullable=True),
     sa.Column('created_at', sa.TIMESTAMP(), nullable=True),
     sa.Column('updated_at', sa.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
