@@ -5,7 +5,7 @@ from app import app as application
 from app import db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from utils.init_app import BASE, create_session
+from utils.init_app import create_session
 
 @pytest.fixture(scope='session')
 def app(request):
