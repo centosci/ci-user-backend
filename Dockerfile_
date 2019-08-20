@@ -1,0 +1,10 @@
+FROM ubuntu:latest
+RUN apt-get update -y && apt-get install -y python3 python3-pip libpq-dev curl
+COPY . /app
+WORKDIR /app
+RUN pip3 install virtualenv
+RUN virtualenv venv
+RUN /bin/bash -c "source venv/bin/activate"
+RUN pip3 install -r requirements.txt
+EXPOSE 8000
+CMD ["gunicorn", "wsgi"]

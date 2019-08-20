@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
-from app import db
+from application import db
 from utils.helpers import get_current_ist_time
 
 class User(db.Model):

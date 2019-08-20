@@ -1,8 +1,8 @@
 import flask
 import pytest
 from collections import namedtuple
-from app import app as application
-from app import db
+from application import create_app
+from application import db
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from utils.init_app import create_session
@@ -12,7 +12,7 @@ def app(request):
     """
     Session-wide application instance for testing.
     """
-    a = application
+    a = create_app()
     a.config.from_object("config.TestingConfig")
     a.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://test_user:test123@localhost:5432/test_db'
     # Establish an application context before running the tests.

@@ -1,6 +1,6 @@
 import flask
 from flask import jsonify, Blueprint
-from app import app
+from application import app
 from models import User
 from auth.fas import newFAS
 
