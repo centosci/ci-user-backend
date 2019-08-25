@@ -1,5 +1,7 @@
 from functools import wraps
 import flask
+import os
+import time
 from flask_fas_openid import FAS, request_wants_json, FASJSONEncoder
 from openid.extensions import pape, sreg, ax
 from openid.consumer import consumer
@@ -91,6 +93,7 @@ class newFAS(FAS):
         return_to = trust_root + '_flask_fas_openid_handler/'
         flask.session['FLASK_FAS_OPENID_RETURN_URL'] = return_url
         flask.session['FLASK_FAS_OPENID_CANCEL_URL'] = cancel_url
+        flask.session.modified = True
 
         if request_wants_json():
             output = request.getMessage(trust_root,
@@ -101,12 +104,76 @@ class newFAS(FAS):
             redirect_url = request.redirectURL(trust_root, return_to, False)
             return flask.redirect(redirect_url)
         elif not return_to_same_app:
-            redirect_url = request.redirectURL(trust_root, return_to, False)
+            return_to = os.environ['CLIENT_URL'] + '/_flask_fas_openid_handler/'
+            redirect_url = request.redirectURL(os.environ['CLIENT_URL'], return_to, False)
             return redirect_url
         else:
             return request.htmlMarkup(
                 trust_root, return_to,
                 form_tag_attrs={'id': 'openid_message'}, immediate=False)
+
+    def _handle_openid_request(self):
+        return_url = flask.session.get('FLASK_FAS_OPENID_RETURN_URL', None)
+        cancel_url = flask.session.get('FLASK_FAS_OPENID_CANCEL_URL', None)
+        base_url = self.normalize_url(flask.request.base_url)
+        oidconsumer = consumer.Consumer(flask.session, None)
+        info = oidconsumer.complete(flask.request.values, os.environ['CLIENT_URL'] + '/_flask_fas_openid_handler/')
+        display_identifier = info.getDisplayIdentifier()
+        
+        if info.status == consumer.FAILURE and display_identifier:
+            return 'FAILURE. display_identifier: %s' % display_identifier
+        elif info.status == consumer.CANCEL:
+            if cancel_url:
+                return flask.redirect(cancel_url)
+            return 'OpenID request was cancelled'
+        elif info.status == consumer.SUCCESS:
+            if info.endpoint.server_url != \
+                    self.app.config['FAS_OPENID_ENDPOINT']:
+                log.warn('Claim received from invalid issuer: %s',
+                         info.endpoint.server_url)
+                return 'Invalid provider issued claim!'
+
+            sreg_resp = sreg.SRegResponse.fromSuccessResponse(info)
+            teams_resp = teams.TeamsResponse.fromSuccessResponse(info)
+            cla_resp = cla.CLAResponse.fromSuccessResponse(info)
+            ax_resp = ax.FetchResponse.fromSuccessResponse(info)
+            user = {'fullname': '', 'username': '', 'email': '',
+                    'timezone': '', 'cla_done': False, 'groups': []}
+            if not sreg_resp:
+                # If we have no basic info, be gone with them!
+                return flask.redirect(cancel_url)
+            user['username'] = sreg_resp.get('nickname')
+            user['fullname'] = sreg_resp.get('fullname')
+            user['email'] = sreg_resp.get('email')
+            user['timezone'] = sreg_resp.get('timezone')
+            user['login_time'] = time.time()
+            if cla_resp:
+                user['cla_done'] = cla.CLA_URI_FEDORA_DONE in cla_resp.clas
+            if teams_resp:
+                # The groups do not contain the cla_ groups
+                user['groups'] = frozenset(teams_resp.teams)
+            if ax_resp:
+                ssh_keys = ax_resp.get(
+                    'http://fedoauth.org/openid/schema/SSH/key')
+                if isinstance(ssh_keys, (list, tuple)):
+                    ssh_keys = '\n'.join(
+                        ssh_key
+                        for ssh_key in ssh_keys
+                        if ssh_key.strip()
+                    )
+                    if ssh_keys:
+                        user['ssh_key'] = ssh_keys
+                user['gpg_keyid'] = ax_resp.get(
+                    'http://fedoauth.org/openid/schema/GPG/keyid')
+            flask.session['FLASK_FAS_OPENID_USER'] = user
+            flask.session.modified = True
+            if self.postlogin_func is not None:
+                self._check_session()
+                return self.postlogin_func(return_url)
+            else:
+                return flask.redirect(return_url)
+        else:
+            return 'Strange state: %s' % info.status
 
 def fas_login_required(function):
     """ Flask decorator to ensure that the user is logged in against FAS.

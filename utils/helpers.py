@@ -1,15 +1,10 @@
 import flask
 from models import *
-import datetime
-
-def get_current_ist_time():
-    return datetime.datetime.utcnow()
     
 def add_comment(request_id, user_id, comment):
     """
     Add comment on a project request.
     """
-    
     new_comment = Comment(user_id=user_id, request_id=request_id, comment=comment)
     flask.g.session.add(new_comment)
     return {'result': 'success', 'message': 'Comment added successfully.'}
