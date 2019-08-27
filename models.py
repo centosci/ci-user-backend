@@ -1,8 +1,10 @@
-from app import db
-import datetime
 import uuid
+import datetime
 from sqlalchemy.dialects.postgresql import UUID
+from application import db
 
+def get_current_ist_time():
+    return datetime.datetime.utcnow()
 
 class User(db.Model):
 
@@ -15,8 +17,8 @@ class User(db.Model):
     role = db.Column(db.Enum(*Roles, name='user_role'), default='user')
     email = db.Column(db.String())
     gpg_key = db.Column(db.String())
-    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
+    updated_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
 
     def __repr__(self):
         return f'<id {self.id}>'
@@ -34,8 +36,8 @@ class Request(db.Model):
     project_desc = db.Column(db.String())
     status = db.Column(db.Enum(*RequestStatus, name='request_status'), default='pending')
     updated_by = db.Column(db.String())
-    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
+    updated_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
 
     def __repr__(self):
         return f'<id {self.id}>'
@@ -49,8 +51,8 @@ class Comment(db.Model):
     request_id = db.Column(UUID(), db.ForeignKey(Request.id), nullable=False)
     user_id = db.Column(UUID(), db.ForeignKey(User.id), nullable=False)
     comment = db.Column(db.Text)
-    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
+    updated_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
 
     def __repr__(self):
         return f'<id {self.id}>'
@@ -70,8 +72,8 @@ class Project(db.Model):
     id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, primary_key=True)
     project_name = db.Column(db.String())
     description = db.Column(db.Text)
-    created_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
+    updated_at = db.Column(db.TIMESTAMP, default=get_current_ist_time)
     members = db.relationship('User', secondary=ProjectMember, lazy=True, backref=db.backref('projects', lazy=True))
 
     def __repr__(self):

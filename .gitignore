@@ -4,3 +4,4 @@ app.pyc
 __pycache__
 venv/
 wsgi.pyc
+.pytest_cache
