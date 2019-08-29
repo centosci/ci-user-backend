@@ -8,14 +8,13 @@ from sqlalchemy.ext.declarative import declarative_base
 import string
 import random
 
-# BASE = declarative_base()
 DBSESSIONFACTORY = None
 
 def set_request():
-    """ 
+    """
     Preparing every request.
     """
-    # flask.session.permanent = True  
+    # flask.session.permanent = True
     if not hasattr(flask.g, "session") or not flask.g.session:
         flask.g.session = create_session(flask.current_app.config["SQLALCHEMY_DATABASE_URI"])
 
@@ -26,7 +25,7 @@ def end_request(exception=None):
     flask.g.session.remove()
 
 def create_session(db_url=None, debug=False, pool_recycle=3600):
-    """ 
+    """
     Create the Session object to use to query the database.
     """
     global DBSESSIONFACTORY
@@ -41,5 +40,4 @@ def create_session(db_url=None, debug=False, pool_recycle=3600):
         DBSESSIONFACTORY = sessionmaker(bind=engine)
 
     scopedsession = scoped_session(DBSESSIONFACTORY)
-    # BASE.metadata.bind = scopedsession
     return scopedsession

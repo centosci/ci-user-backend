@@ -4,9 +4,11 @@ import datetime
 from sqlalchemy import func, case
 from models import *
 from auth.fas import fas_login_required
-from utils.helpers import add_comment, create_project_for_request, add_member_to_project
+from utils.helpers import add_comment, create_project_for_request, \
+add_member_to_project, convert_row_to_dict
 
 api = Blueprint('api', __name__)
+
 
 @api.route('/')
 def index():
@@ -20,8 +22,7 @@ def get_user():
     Get user data from database
     """
     user_record = flask.g.session.query(User).filter(User.email == flask.session['FLASK_FAS_OPENID_USER']['email']).one_or_none()
-    row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
-    user = row2dict(user_record)
+    user = convert_row_to_dict(user_record)
     return jsonify(user), 200
 
 
@@ -37,9 +38,9 @@ def create_new_request():
     new_project = False if request.form.get('new_project') and request.form['new_project'] != 'true' else True
 
     if not project_name or (new_project and not project_desc):
-        return jsonify({'result': 'error', 'message':'Please provide input for Project details'}), 200
+        return jsonify({'result': 'error', 'message': 'Please provide input for Project details'}), 200
     if not gpg_key:
-        return jsonify({'result': 'error', 'message':'Please add input for GPG Key'}), 200
+        return jsonify({'result': 'error', 'message': 'Please add input for GPG Key'}), 200
 
     user = flask.g.session.query(User).filter(User.email == flask.g.fas_user.email).one_or_none()
 
@@ -48,11 +49,11 @@ def create_new_request():
 
     request_exists = flask.g.session.query(Request).filter(Request.project_name == project_name, Request.user_id == str(user.id)).one_or_none()
     if request_exists:
-        return jsonify({'result': 'error', 'message':f'Request for this project already exists! Please refer to Request ID: {request_exists.id}'}), 200
+        return jsonify({'result': 'error', 'message': f'Request for this project already exists! Please refer to Request ID: {request_exists.id}'}), 200
 
     new_request = Request(user_id=str(user.id), project_name=project_name, project_desc=project_desc)
     flask.g.session.add(new_request)
-        
+
     flask.g.session.commit()
     
     return jsonify({'result': 'success', 'message': 'Request created succesfully!'}), 200
@@ -79,10 +80,10 @@ def get_requests():
         ).all()
 
     requests = []
-    row2dict = lambda r: {
-        c.name: str(getattr(r, c.name)) 
-        for c in r.__table__.columns 
-        if c.name in ['id', 'project_name', 'status', 'project_desc' ]
+    row2dict = lambda row: {
+        column.name: str(getattr(row, column.name))
+        for column in row.__table__.columns 
+        if column.name in ['id', 'project_name', 'status', 'project_desc']
         }
     
     for req, requested_by in all_requests:
@@ -104,9 +105,7 @@ def get_individual_request(request_id):
         ).filter(Request.id == request_id
         ).one_or_none()
 
-    row2dict = lambda r: {c.name: str(getattr(r, c.name)) for c in r.__table__.columns}
-    
-    current_request_dict = row2dict(current_request)
+    current_request_dict = convert_row_to_dict(current_request)
     current_request_dict['requested_by'] = requested_by
 
     comments = flask.g.session.query(Comment, User
@@ -117,11 +116,11 @@ def get_individual_request(request_id):
 
     comments_list = []
     for comment, commented_by in comments:
-        comments_dict = row2dict(comment)
+        comments_dict = convert_row_to_dict(comment)
         comments_dict['commented_by'] = commented_by.username
         comments_list.append(comments_dict)
 
-    return jsonify({'message':'success', 'current_request': current_request_dict, 'comments': comments_list}), 200
+    return jsonify({'message': 'success', 'current_request': current_request_dict, 'comments': comments_list}), 200
 
 
 @api.route('/edit-request/', methods=['POST'])
@@ -207,10 +206,10 @@ def projects():
     all_projects = flask.g.session.query(Project).order_by(Project.created_at.desc()).all()
 
     projects = []
-    row2dict = lambda r: {
-        c.name: str(getattr(r, c.name)) 
-        for c in r.__table__.columns 
-        if c.name in ['id', 'project_name', 'description', 'description', 'created_at']
+    row2dict = lambda row: {
+        column.name: str(getattr(row, column.name)) 
+        for column in row.__table__.columns 
+        if column.name in ['id', 'project_name', 'description', 'description', 'created_at']
         }
     
     for project in all_projects:

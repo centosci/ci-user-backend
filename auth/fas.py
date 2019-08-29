@@ -9,6 +9,7 @@ from openid_teams import teams
 from openid_cla import cla
 import six
 
+
 class newFAS(FAS):
 
     def init_app(self, app):
@@ -55,8 +56,8 @@ class newFAS(FAS):
             else:
                 return_url = flask.request.url_root
 
-        return_to_same_app =  self._check_safe_root(return_url)
-            
+        return_to_same_app = self._check_safe_root(return_url)
+
         session = {}
         oidconsumer = consumer.Consumer(session, None)
         try:
@@ -119,7 +120,7 @@ class newFAS(FAS):
         oidconsumer = consumer.Consumer(flask.session, None)
         info = oidconsumer.complete(flask.request.values, os.environ['CLIENT_URL'] + '/_flask_fas_openid_handler/')
         display_identifier = info.getDisplayIdentifier()
-        
+
         if info.status == consumer.FAILURE and display_identifier:
             return 'FAILURE. display_identifier: %s' % display_identifier
         elif info.status == consumer.CANCEL:
@@ -174,6 +175,7 @@ class newFAS(FAS):
                 return flask.redirect(return_url)
         else:
             return 'Strange state: %s' % info.status
+
 
 def fas_login_required(function):
     """ Flask decorator to ensure that the user is logged in against FAS.
