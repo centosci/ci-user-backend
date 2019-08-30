@@ -2,13 +2,14 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from utils.init_app import set_request, end_request
+from utils.init_app_helpers import set_request, end_request
 from flask_cors import CORS
 
 app = Flask(__name__)
 
 db = SQLAlchemy()
 migrate = Migrate()
+
 
 def create_app():
 
