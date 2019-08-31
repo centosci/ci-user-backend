@@ -1,7 +1,16 @@
 import uuid
 import datetime
+import flask
 from sqlalchemy.dialects.postgresql import UUID
 from application import db
+
+def get_request_ref_id():
+    latest_ref_id = flask.g.session.query(Request.reference_id).order_by(Request.created_at.desc()).first()
+    if latest_ref_id:
+        latest_ref_id = latest_ref_id[0]
+    else:
+        latest_ref_id = 1000
+    return latest_ref_id + 1
 
 class User(db.Model):
 
@@ -29,6 +38,7 @@ class Request(db.Model):
 
     id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, primary_key=True)
     user_id = db.Column(UUID(), db.ForeignKey(User.id), nullable=False)
+    reference_id = db.Column(db.Integer, default=get_request_ref_id, unique=True)
     project_name = db.Column(db.String())
     project_desc = db.Column(db.String())
     status = db.Column(db.Enum(*RequestStatus, name='request_status'), default='pending')
