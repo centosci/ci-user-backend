@@ -31,3 +31,6 @@ Export environment variables using either of the following
 
 Start the application
 > ```flask run```
+
+To run tests
+> ```python -m pytest```

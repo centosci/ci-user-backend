@@ -47,9 +47,13 @@ def create_new_request():
     if gpg_key != user.gpg_key:
         user.gpg_key = gpg_key
 
-    request_exists = flask.g.session.query(Request).filter(Request.project_name == project_name, Request.user_id == str(user.id)).one_or_none()
+    request_exists = flask.g.session.query(Request
+        ).filter(Request.project_name == project_name,
+                 Request.user_id == str(user.id)
+        ).one_or_none()
+
     if request_exists:
-        return jsonify({'result': 'error', 'message': f'Request for this project already exists! Please refer to Request ID: {request_exists.id}'}), 200
+        return jsonify({'result': 'error', 'message': f'Request for this project already exists! Please refer to Request ID: {request_exists.reference_id}'}), 200
 
     new_request = Request(user_id=str(user.id), project_name=project_name, project_desc=project_desc)
     flask.g.session.add(new_request)
@@ -68,8 +72,8 @@ def get_requests():
     filters = []
     if 'project_name' in request.args:
         filters.append(Request.project_name == request.args['project_name'])
-    if 'request_id' in request.args:
-        filters.append(func.text(Request.id) == request.args['request_id'])
+    if 'reference_id' in request.args:
+        filters.append(func.text(Request.reference_id) == request.args['reference_id'])
 
     all_requests = flask.g.session.query(Request, User.username
         ).join(User, Request.user_id == User.id
@@ -83,7 +87,7 @@ def get_requests():
     row2dict = lambda row: {
         column.name: str(getattr(row, column.name))
         for column in row.__table__.columns 
-        if column.name in ['id', 'project_name', 'status', 'project_desc']
+        if column.name in ['reference_id', 'project_name', 'status', 'project_desc']
         }
     
     for req, requested_by in all_requests:
@@ -94,19 +98,20 @@ def get_requests():
     return jsonify({'message': 'success', 'requests': requests}), 200
 
 
-@api.route('/requests/<string:request_id>', methods=['GET'])
+@api.route('/requests/<string:reference_id>', methods=['GET'])
 @fas_login_required
-def get_individual_request(request_id):
+def get_individual_request(reference_id):
     """
     Get individual request data
     """
     current_request, requested_by = flask.g.session.query(Request, User.username
         ).join(User, Request.user_id == User.id
-        ).filter(Request.id == request_id
+        ).filter(Request.reference_id == reference_id
         ).one_or_none()
 
     current_request_dict = convert_row_to_dict(current_request)
     current_request_dict['requested_by'] = requested_by
+    request_id = current_request_dict['id']
 
     comments = flask.g.session.query(Comment, User
         ).join(User, User.id == Comment.user_id
@@ -131,7 +136,7 @@ def edit_request():
     Allow users with admin or superuser roles to approve or reject request.
     """
     action = request.args.get('action')
-    request_id = request.args.get('request_id')
+    reference_id = request.args.get('reference_id')
 
     user = flask.session['FLASK_FAS_OPENID_USER'].get('username')
     user_obj = flask.g.session.query(User).filter(User.username == user).one_or_none()
@@ -139,7 +144,7 @@ def edit_request():
     current_request, requested_by = flask.g.session.query(Request, User.username
         ).join(User, Request.user_id == User.id
         ).filter(
-            Request.id == request_id,
+            Request.reference_id == reference_id,
             Request.status == 'pending',
         ).one_or_none()
 
@@ -170,7 +175,7 @@ def edit_request():
     elif action == 'declined':
         if user != requested_by:
             comment = request.args.get('reject_reason')
-            action_response = add_comment(request_id, str(user_obj.id), comment)
+            action_response = add_comment(current_request.id, str(user_obj.id), comment)
         else:
             action_response = {'result': 'success'}
     
@@ -187,12 +192,13 @@ def post_comment():
     """
     Add comment on a request
     """
-    request_id = request.form.get('request_id')
+    request_reference_id = request.form.get('request_ref_id')
+    current_request = flask.g.session.query(Request).filter(Request.reference_id == request_reference_id).one()
     comment = request.form.get('comment')
     user = flask.session['FLASK_FAS_OPENID_USER']['username']
     user_obj = flask.g.session.query(User).filter(User.username == user).one_or_none()
     
-    response = add_comment(request_id, str(user_obj.id), comment)
+    response = add_comment(str(current_request.id), str(user_obj.id), comment)
     if response['result'] == 'success':
         flask.g.session.commit()
         return jsonify({'result': 'success', 'message': response['message']})
