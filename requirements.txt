@@ -29,7 +29,7 @@ openidc-client==0.6.0
 packaging==19.1
 pluggy==0.12.0
 psycopg2==2.8.3
-py==1.8.0
+py==1.10.0
 pyparsing==2.4.2
 pyrsistent==0.15.2
 pytest==5.1.0
