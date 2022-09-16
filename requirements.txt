@@ -21,7 +21,7 @@ Jinja2==2.10.1
 jsonschema==3.0.1
 kitchen==1.2.6
 lockfile==0.12.2
-Mako==1.0.12
+Mako==1.2.2
 MarkupSafe==1.1.1
 more-itertools==7.2.0
 munch==2.3.2
